@@ -9,6 +9,18 @@ from plyfile import PlyData, PlyElement
 from matplotlib.font_manager import FontProperties
 
 def flatten_cubes(vol, nvx, nb):
+    '''
+    flattens subcubes in cube of size nb*nb*nb i.e. values from the same
+    subcube are disposed one after the other
+    Parameters:
+        vol (np.ndarray): volume to flatten of size (nvx, nvx, nvx, c) where
+                          c is the number of channels
+        nvx (int): cube size along one dimension
+        nb (int): subcube size along one dimension
+    Return
+        vol (np.ndarray): flattened volume of size 
+                          (nvx/nb, nvx/nb, nvx/nb, nb**3, c)
+    '''
     nbl = nvx // nb
     # divides each of the dimensions in nbl parts of dimension nb
     vol = vol.reshape(nbl, nb, nbl, nb, nbl, nb, -1)
@@ -23,6 +35,18 @@ def flatten_cubes(vol, nvx, nb):
 
 
 def unflatten_cubes(vol, nvx, nb):
+    '''
+    Inverse operation of flatten cubes
+    Parameters:
+        vol (np.ndarray): volume to unflatten of size 
+                          (nvx/nb, nvx/nb, nvx/nb, nb**3, c) where
+                          c is the number of channels
+        nvx (int): cube size along one dimension
+        nb (int): subcube size along one dimension
+    Return
+        vol (np.ndarray): reshaped volume of size
+                          (nvx, nvx, nvx, c)
+    '''
     nbl = nvx // nb
     vol = vol.reshape(nbl, nbl, nbl, nb, nb, nb, -1)
     vol = vol.swapaxes(1, 2).swapaxes(3, 4).swapaxes(1, 4).reshape(
@@ -34,6 +58,15 @@ def unflatten_cubes(vol, nvx, nb):
 
 
 def qualityPCL(rec_ref, str_ref, scale=1023):
+    '''
+    Used to compute the D1 and D2 metrics for two PCs
+    Parameters:
+        rec_ref (string): path to the reconstructed PC
+        str_ref (string): path to the original PC
+        scale (float): reference scale
+    Returns:
+        psnrD1 (float): D1 psnr
+    '''
     if platform == "win32":
         command = os.path.join(
             "..",
@@ -53,15 +86,6 @@ def qualityPCL(rec_ref, str_ref, scale=1023):
     i = find_nth_occurrence(out, 'mseF', 2)
     psnrD1 = float(out[(i + 20):].split('\n')[0].strip())
     return psnrD1
-
-
-def find_nth_occurrence(s, match, n):
-    final_ind = 0
-    for _ in range(n):
-        i = s.find(match)
-        s = s[(i + len(match)):]
-        final_ind += i + len(match)
-    return final_ind - len(match)
 
 
 def plot_pointcloud(ptc: np.ndarray, name, color=None, colorset=None) -> None:
@@ -120,6 +144,11 @@ def read_ply_files(filepath, only_geom=True, att_name="color"):
         Parameters:
             filepath (string): path to the point cloud
             only_geom (boolean): reads only geometry
+            att_name (string): name of the extra attribute that should be read
+        Return:
+            numpy_pc (np.ndarray): numpy array of shape (N, c) that contains
+                                   the geometry and the extra attributes red
+                                   from the file
     '''
 
     plydata = PlyData.read(os.path.join(filepath))
@@ -169,6 +198,11 @@ def write_ply_file(
             filepath (string): path to the ply file
             ascii_text (bool): decides whether to write the file in
                                binary or ascii
+            attributes (list): list of columns containing the various numpy 
+                               attributes
+            dtype (list): list of numpy dtpyes one for each attribute
+            names (list): list of strings that are the name of the extra
+                          attributes
     '''
 
     # transforming the pc in the format liked by
@@ -232,6 +266,9 @@ def encode_with_TMC13(
                     quantization should be used
             q_level (int): tells how many octree levels should be skipped both
                     with quantization and trisoup
+            ascii_text (Bool): wether the reconstructed PC should be in binary
+                               or ascii form
+            encode_colors (Bool): if true also colors are encoded
 
     '''
 
@@ -270,6 +307,21 @@ def decode_with_TMC13(
         silence_output=True
 ):
 
+
+    '''
+    Uses TMC13 to decode a point cloud
+
+        Parameters:
+            compressed_path (string): path to the compressed PC
+            reconstructed_path (string): path where the PC should be 
+                                         reconstructed
+            path_to_TMC13 (string): path to the TMC13 executable
+            ascii_text (Bool): wether the reconstructed PC should be in binary
+                               or ascii form
+            silence_output (bool): used to silence the output of the compression
+                    command
+
+    '''
     # building up the command
     command = " ".join([
         path_to_TMC13,
@@ -296,6 +348,19 @@ def decode_with_draco(
     silence_output=True
 ):
 
+    '''
+    Uses Draco to decode a point cloud
+
+        Parameters:
+            compressed_path (string): path to the compressed PC
+            reconstructed_path (string): path where the PC should be 
+                                         reconstructed
+            path_to_draco (string): path to the draco executable
+            silence_output (bool): used to silence the output of the compression
+                    command
+
+    '''
+
     command = " ".join([
         os.path.join(path_to_draco, "draco_decoder"),
         f"-i {compressed_path}",
@@ -316,6 +381,21 @@ def decode(
     ascii_text=True,
     silence_output=True
 ):
+    '''
+    Uses either TMC13 or draco to decode a point cloud
+
+        Parameters:
+            compressed_path (string): path to the compressed PC
+            reconstructed_path (string): path where the PC should be 
+                                         reconstructed
+            path_to_codec (string): path to the codec executable
+            codec (string): name of the codec (either draco or tmc13)
+            ascii_text (Bool): wether the reconstructed PC should be in binary
+                               or ascii form
+            silence_output (bool): used to silence the output of the compression
+                    command
+
+    '''
     if codec == "tmc13":
         decode_with_TMC13(
             compressed_path,
@@ -382,11 +462,10 @@ def encode(
             path_to_codec (string): path to the codec executable
             input_path (string): path to the point cloud to be coded
             compressed_path (string): path of the compressed representation
-            output (string): path to the reconstructed point cloud
             quantization_bits (int): number of bits used to represent geometry
             silence_output (bool): used to silence the output of the compression
                     command
-            codec (string): used to choose which codec to use (TMC13/draco)
+            codec (string): used to choose which codec to use (tmc13/draco)
             **args: dictionary of parameters for tmc13 (see function
                     encode_with_TMC13)
     '''
@@ -423,6 +502,22 @@ def encode_and_decode(
     codec="draco",
     **args
 ):
+    '''
+    encodes and decodes a point cloud
+        Parameters:
+            path_to_codec (string): path to the codec executable
+            input_path (string): path to the point cloud to be coded
+            compressed_path (string): path of the compressed representation
+            reconstructed_path (string): path where the PC will be 
+                                         reconstructed
+            quantization_bits (int): number of bits to be removed via 
+                                     quantization
+            silence_output (bool): used to silence the output of the compression
+                    command
+            codec (string): used to choose which codec to use (tmc13/draco)
+            **args: dictionary of parameters for tmc13 (see function
+                    encode_with_TMC13)
+    '''
     encode(
         path_to_codec,
         input_path,
@@ -444,6 +539,19 @@ def encode_and_decode(
 # taken from
 # https://github.com/jascenso/bjontegaard_metrics/blob/master/bj_delta.py
 def bj_delta(R1, PSNR1, R2, PSNR2, mode=0):
+    '''
+    Computes the Bjontegaard delta rate for the given plots
+    Parameters:
+        R1 (np.ndarray): rates for the new codec
+        PSNR1 (np.ndarray): PSNR for the new codec
+        R1 (np.ndarray): rate for the reference codec
+        PSNR1 (np.ndarray): PSNR for the reference codec
+        mode (int): 0 returns delta rate 1 returns delta PSNR
+    Returns:
+        avg_diff (float): delta value
+        
+
+    '''
     lR1 = np.log(R1)
     lR2 = np.log(R2)
 
