@@ -105,9 +105,27 @@ def qualityPCL(rec_ref, str_ref, scale=1023):
         ) + f" -a {str_ref}"
     command += f" -b {rec_ref} -d 1 -r {scale}"
     out = subprocess.check_output(command, shell=True).decode("utf-8")
-    i = find_nth_occurrence(out, 'mseF', 2)
+    i = _find_nth_occurrence(out, 'mseF', 2)
     psnrD1 = float(out[(i + 20):].split('\n')[0].strip())
     return psnrD1
+
+def _find_nth_occurrence(s, match, n):
+    """
+    gets the nth occurrence of match in s
+    Parameters:
+        s (string): full string
+        match (string): patter to match
+        n (int): number of times the pattern should be matched
+    Return:
+        index (int): index in the string of the first charachter of the nth
+                     match
+    """
+    final_ind = 0
+    for _ in range(n):
+        i = s.find(match)
+        s = s[(i + len(match)):]
+        final_ind += i + len(match)
+    return final_ind - len(match)
 
 
 def plot_pointcloud(ptc: np.ndarray, name, color=None, colorset=None) -> None:
