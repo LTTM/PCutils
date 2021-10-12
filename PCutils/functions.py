@@ -54,8 +54,30 @@ def unflatten_cubes(vol, nvx, nb):
     )
     return vol
 
+def voxelize_PC(pc, n_voxels=1024):
+    '''
+        voxelizes the point cloud in a cube with n_voxels voxels per dimension
 
+        Parameters:
+            pc (np.ndarray): the point cloud to be voxelized with
+                            shape (Npts, nattr)
+            n_voxels (int): number of voxels per dimension
+        Returns:
+            pc (np.ndarray): voxelized version of pc
 
+    '''
+
+    # finding the maximum delta of the PC
+    min_val = np.min(pc[:, :3], axis=0)
+    max_val = np.max(pc[:, :3], axis=0)
+    dim_range = (np.max(max_val - min_val) + 0.0001) / n_voxels
+    delta_m = min_val + (max_val - min_val) / 2
+
+    # normalizing the PC to have a 10 bit representation
+    pc[:, :3] = pc[:, :3] - np.reshape(delta_m, (1, -1))
+    pc[:, :3] = np.round(pc[:, :3] / dim_range) + n_voxels//2
+
+    return pc
 
 def qualityPCL(rec_ref, str_ref, scale=1023):
     '''
