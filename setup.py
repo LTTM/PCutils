@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='PCutils',
-    version='0.0.2',
+    version='0.0.3',
     author='Daniele Mari',
     author_email='daniele.mari@phd.unipd.it',
     description='Package with useful processing functions for PCs with focus on PC coding',
