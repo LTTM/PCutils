@@ -165,13 +165,7 @@ def read_ply_files(filepath, only_geom=True, att_name="color"):
             plydata['vertex'].data["green"],
             plydata['vertex'].data["blue"],
         ]
-    elif only_geom:
-        data += [
-            np.zeros_like(plydata['vertex'].data["x"]),
-            np.zeros_like(plydata['vertex'].data["x"]),
-            np.zeros_like(plydata['vertex'].data["x"])
-        ]
-    else:
+    elif not only_geom and att_name != "color":
         data += [
             plydata['vertex'].data[att_name]
         ]
