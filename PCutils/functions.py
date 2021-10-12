@@ -7,6 +7,7 @@ import subprocess
 from sys import platform
 from plyfile import PlyData, PlyElement
 from matplotlib.font_manager import FontProperties
+import pandas as pd
 
 def flatten_cubes(vol, nvx, nb):
     '''
@@ -297,6 +298,23 @@ def write_ply_file(
         else:
             PlyData([el], byte_order='<').write(pc_file)
 
+def collapse_duplicate_points(pc):
+    '''
+    Takes a point cloud and collapses all overlapping points into 
+    one by taking the average of the attributes
+    Parameters:
+        pc (np.ndarray): point cloud to be processed with shape (Npts, c) where
+                         c is the number of channels (the first three channels
+                         must be x, y, z)
+    Return:
+        out_pc: point cloud without duplicates
+    '''
+    
+    input_dict = {"x": pc[:, 0], "y": pc[:, 1], "z": pc[:, 2]}
+    input_dict.update({i: x for i, x in enumerate(list(pc[:, 3:].transpose()))})
+    pc_df = pd.DataFrame(input_dict)
+    out_pc = pc_df.groupby(["x", "y", "z"]).mean().round().reset_index()
+    return out_pc.to_numpy()
 
 def encode_with_TMC13(
     path_to_TMC13,
