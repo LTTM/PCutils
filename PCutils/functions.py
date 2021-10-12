@@ -79,13 +79,14 @@ def voxelize_PC(pc, n_voxels=1024):
 
     return pc
 
-def qualityPCL(rec_ref, str_ref, scale=1023):
+def qualityPCL(rec_ref, str_ref, scale=1023, colored=False):
     '''
     Used to compute the D1 and D2 metrics for two PCs
     Parameters:
         rec_ref (string): path to the reconstructed PC
         str_ref (string): path to the original PC
         scale (float): reference scale
+        colored (boolean): wether to compute also Yuv PSNR
     Returns:
         psnrD1 (float): D1 psnr
     '''
@@ -104,10 +105,33 @@ def qualityPCL(rec_ref, str_ref, scale=1023):
             "pc_error_d"
         ) + f" -a {str_ref}"
     command += f" -b {rec_ref} -d 1 -r {scale}"
+
+    if colored:
+        command += " -c 1"
+
     out = subprocess.check_output(command, shell=True).decode("utf-8")
-    i = _find_nth_occurrence(out, 'mseF', 2)
-    psnrD1 = float(out[(i + 20):].split('\n')[0].strip())
-    return psnrD1
+
+    if not colored:
+        i = _find_nth_occurrence(out, 'mseF', 2)
+        psnrD1 = float(out[(i + 20):].split('\n')[0].strip())
+        return psnrD1
+
+    else:
+        i = find_nth_occurrence(out, 'mseF', 2)
+        psnrD1 = float(out[(i + 20):(i + 27)].strip())
+        i = out.find('h.,PSNR')
+        psnrD1H = float(out[(i + 20):(i + 27)].strip())
+        i = find_nth_occurrence(out, 'PSNRF', 1)
+        psnrY = float(out[(i + 15):(i + 22)].strip())
+        i = find_nth_occurrence(out, 'PSNRF', 2)
+        psnrU = float(out[(i + 15):(i + 22)].strip())
+        i = find_nth_occurrence(out, 'PSNRF', 3)
+        temp = out[(i + 15):(i + 22)].strip()
+        if "inf" in temp:
+            psnrV = np.inf
+        else:
+            psnrV = float(temp)
+        return [psnrD1, psnrD1H, psnrY, psnrU, psnrV]
 
 def _find_nth_occurrence(s, match, n):
     """
