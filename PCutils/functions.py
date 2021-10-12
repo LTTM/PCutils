@@ -117,15 +117,15 @@ def qualityPCL(rec_ref, str_ref, scale=1023, colored=False):
         return psnrD1
 
     else:
-        i = find_nth_occurrence(out, 'mseF', 2)
+        i = _find_nth_occurrence(out, 'mseF', 2)
         psnrD1 = float(out[(i + 20):(i + 27)].strip())
         i = out.find('h.,PSNR')
         psnrD1H = float(out[(i + 20):(i + 27)].strip())
-        i = find_nth_occurrence(out, 'PSNRF', 1)
+        i = _find_nth_occurrence(out, 'PSNRF', 1)
         psnrY = float(out[(i + 15):(i + 22)].strip())
-        i = find_nth_occurrence(out, 'PSNRF', 2)
+        i = _find_nth_occurrence(out, 'PSNRF', 2)
         psnrU = float(out[(i + 15):(i + 22)].strip())
-        i = find_nth_occurrence(out, 'PSNRF', 3)
+        i = _find_nth_occurrence(out, 'PSNRF', 3)
         temp = out[(i + 15):(i + 22)].strip()
         if "inf" in temp:
             psnrV = np.inf
