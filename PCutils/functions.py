@@ -389,7 +389,7 @@ def _encode_with_TMC13(TMC13, silence_output=True, **args):
 
     command = " ".join(
         [TMC13] + 
-        [f"--{key}=args[key]" for key in args]
+        [f"--{key}={args[key]}" for key in args]
     )
 
     if silence_output:
