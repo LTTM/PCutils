@@ -371,7 +371,7 @@ def encode_with_TMC13(
         tmc13_args["outputBinaryPly"] = 0
 
     tmc13_args.update(args)
-    _encode_with_TMC13(path_to_TMC13, silence_output, tmc13_args)
+    _encode_with_TMC13(path_to_TMC13, silence_output, **tmc13_args)
 
 
 def _encode_with_TMC13(TMC13, silence_output=True, **args):
