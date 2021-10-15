@@ -325,7 +325,8 @@ def encode_with_TMC13(
     trisoup=False,
     q_level=0,
     ascii_text=False,
-    encode_colors=False
+    encode_colors=False,
+    **args
 ):
     '''
     Uses TMC13 to encode a point cloud
@@ -345,7 +346,8 @@ def encode_with_TMC13(
             ascii_text (Bool): wether the reconstructed PC should be in binary
                                or ascii form
             encode_colors (Bool): if true also colors are encoded
-
+            **args: extra arguments specifics to TMC13 (eg. qp that sets 
+                    quantization parameter for the Y component)
     '''
 
     # building up the command
@@ -360,6 +362,11 @@ def encode_with_TMC13(
 
     if encode_colors:
         command += " --attribute=color"
+
+    command += " ".join([
+        "--" + key + "=" + str(args[key]) for key in args
+    ])
+
     if trisoup:
         command += f" --trisoupNodeSizeLog2={q_level + 1}"
     else:
