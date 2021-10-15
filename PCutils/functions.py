@@ -350,37 +350,53 @@ def encode_with_TMC13(
                     quantization parameter for the Y component)
     '''
 
-    # building up the command
-    command = " ".join([
-        path_to_TMC13,
-        f"--mode=0",
-        f"--compressedStreamPath={comp_data_path}",
-        f"--uncompressedDataPath={unc_data_path}",
-        f"--inputScale={pc_scale_factor}",
-        f"--externalScale={1/pc_scale_factor}"
-    ])
+    tmc13_args = {
+        "mode": 0,
+        "compressedStreamPath": comp_data_path,
+        "uncompressedDataPath": unc_data_path,
+        "inputScale": pc_scale_factor,
+        "externalScale": 1/pc_scale_factor,
+    }
 
     if encode_colors:
-        command += " --attribute=color"
+        tmc13_args["attribute"] = "color"
 
-    command += " ".join([
-        "--" + key + "=" + str(args[key]) for key in args
-    ])
 
     if trisoup:
-        command += f" --trisoupNodeSizeLog2={q_level + 1}"
+        tmc13_args["trisoupNodeSizeLog2"] = q_level + 1
     else:
-        command += f" --codingScale={1/2**q_level}"
+        tmc13_args["codingScale"] = 1/2**q_level
 
     if ascii_text:
-        command += " --outputBinaryPly=0"
+        tmc13_args["outputBinaryPly"] = 0
+
+    tmc13_args.update(args)
+    _encode_with_TMC13(path_to_TMC13, silence_output, tmc13_args)
+
+
+def _encode_with_TMC13(TMC13, silence_output=True, **args):
+
+    '''
+    Uses TMC13 to encode a point cloud with arbitrary parameters
+
+        Parameters:
+            TMC13 (string): path to the TMC13 executable
+            silence_output (bool): used to silence the output of the compression
+                    command
+            **args: arguments specifics to TMC13 (eg. qp that sets 
+                    quantization parameter for the Y component)
+    '''
+
+    command = " ".join(
+        [TMC13] + 
+        [f"--{key}=args[key]" for key in args]
+    )
 
     if silence_output:
         command += " >/dev/null 2>&1"
 
     # executing the command
     os.system(command)
-
 
 def decode_with_TMC13(
         compressed_path,
