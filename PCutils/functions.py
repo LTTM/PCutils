@@ -9,6 +9,45 @@ from plyfile import PlyData, PlyElement
 from matplotlib.font_manager import FontProperties
 import pandas as pd
 
+def plot_scatter_pcs(pcs):
+    '''
+    initializes a figure with n voxelized pointclouds as scatter plots
+    Parameters:
+        pcs (np.ndarray): list of arrays of shape (H, W, D, c) where c 
+                          is the number of 
+                          channels, c can be 1 (onyl geometry) or 4 (geometry)
+                          + color and the color should be in the 0-1 range
+    Returns:
+        axs (list): list of axs so they can be customized outside
+    '''
+    
+    axs = []
+    fig = plt.figure()
+    for i, pc in enumerate(pcs):
+
+        #checking that the input is correct
+        if len(pc.shape) != 4:
+            plt.close(fig)
+            raise Exception("The input shape should be of type (H, W, D, c)")
+        if pc.shape[3] != 1 and pc.shape[3] != 4
+            plt.close(fig)
+            raise Exception("The number of channels should be 1 or 4")
+        if np.max(pc > 1) or np.min(pc) < 0:
+            plt.close(fig)
+            raise Exception("The values for color should be in the [0, 1] range")
+        
+        
+        ax = fig.add_subplot(f"1{len(pcs)}{i + 1}", projection="3d")
+        coords = np.where(pc[:, :, :, 0] > 0)
+        colors = pc[coords]
+        ax.scatter(*coords, c=colors)
+        axs.append(ax)
+
+    return axs
+
+
+
+
 def flatten_cubes(vol, nvx, nb):
     '''
     flattens subcubes in cube of size nb*nb*nb i.e. values from the same
