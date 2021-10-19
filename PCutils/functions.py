@@ -29,7 +29,7 @@ def plot_scatter_pcs(pcs):
         if len(pc.shape) != 4:
             plt.close(fig)
             raise Exception("The input shape should be of type (H, W, D, c)")
-        if pc.shape[3] != 1 and pc.shape[3] != 4
+        if pc.shape[3] != 1 and pc.shape[3] != 4:
             plt.close(fig)
             raise Exception("The number of channels should be 1 or 4")
         if np.max(pc > 1) or np.min(pc) < 0:
