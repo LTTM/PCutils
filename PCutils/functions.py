@@ -39,7 +39,7 @@ def plot_scatter_pcs(pcs):
         
         ax = fig.add_subplot(int(f"1{len(pcs)}{i + 1}"), projection="3d")
         coords = np.where(pc[:, :, :, 0] > 0)
-        colors = pc[coords]
+        colors = pc[coords][:, 1:]
         ax.scatter(*coords, c=colors)
         axs.append(ax)
 
