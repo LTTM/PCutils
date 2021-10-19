@@ -37,7 +37,7 @@ def plot_scatter_pcs(pcs):
             raise Exception("The values for color should be in the [0, 1] range")
         
         
-        ax = fig.add_subplot(f"1{len(pcs)}{i + 1}", projection="3d")
+        ax = fig.add_subplot(int(f"1{len(pcs)}{i + 1}"), projection="3d")
         coords = np.where(pc[:, :, :, 0] > 0)
         colors = pc[coords]
         ax.scatter(*coords, c=colors)
