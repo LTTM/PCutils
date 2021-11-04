@@ -676,7 +676,7 @@ def encode_and_decode(
 
 # taken from
 # https://github.com/jascenso/bjontegaard_metrics/blob/master/bj_delta.py
-def bj_delta(R1, PSNR1, R2, PSNR2, mode=0):
+def bj_delta(R1, PSNR1, R2, PSNR2, mode=0, poly_exp=3):
     '''
     Computes the Bjontegaard delta rate for the given plots
     Parameters:
@@ -685,6 +685,7 @@ def bj_delta(R1, PSNR1, R2, PSNR2, mode=0):
         R1 (np.ndarray): rate for the reference codec
         PSNR1 (np.ndarray): PSNR for the reference codec
         mode (int): 0 returns delta rate 1 returns delta PSNR
+        poly_exp (int): defines the degree of the fitted polynomial 
     Returns:
         avg_diff (float): delta value
         
@@ -696,8 +697,8 @@ def bj_delta(R1, PSNR1, R2, PSNR2, mode=0):
     # find integral
     if mode == 0:
         # least squares polynomial fit
-        p1 = np.polyfit(lR1, PSNR1, 3)
-        p2 = np.polyfit(lR2, PSNR2, 3)
+        p1 = np.polyfit(lR1, PSNR1, poly_exp)
+        p2 = np.polyfit(lR2, PSNR2, poly_exp)
 
         # integration interval
         min_int = max(min(lR1), min(lR2))
@@ -716,8 +717,8 @@ def bj_delta(R1, PSNR1, R2, PSNR2, mode=0):
         avg_diff = (int2-int1)/(max_int-min_int)
     else:
         # rate method: sames as previous one but with inverse order
-        p1 = np.polyfit(PSNR1, lR1, 3)
-        p2 = np.polyfit(PSNR2, lR2, 3)
+        p1 = np.polyfit(PSNR1, lR1, poly_exp)
+        p2 = np.polyfit(PSNR2, lR2, poly_exp)
 
         # integration interval
         min_int = max(min(PSNR1), min(PSNR2))
