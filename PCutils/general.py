@@ -282,3 +282,31 @@ def collapse_duplicate_points(pc):
     out_pc = pc_df.groupby(["x", "y", "z"]).mean().round().reset_index()
     return out_pc.to_numpy()
 
+class Octree:
+
+    def __init__(self, block: np.ndarray) -> None:
+        resolution = block.shape[0]
+        reshaped_pc = flatten_cubes(
+            block,
+            resolution,
+            resolution//2
+        )
+        geom_presence = np.any(
+            reshaped_pc[:, :, :, :, :1].reshape((2, 2, 2, -1)),
+            axis = 3
+        )
+        self.children = [None] * 8
+        self.color = None
+        if resolution > 2:
+            coords = list(np.array(np.where(geom_presence)).transpose())
+            for x, y, z in coords:
+                self.children[x + 2 * y + 4 * z] = Octree(
+                    unflatten_cubes(
+                        reshaped_pc[x, y, z],
+                        resolution//2,
+                        resolution//2
+                    )
+                )
+        else:
+            self.color = reshaped_pc.reshape((-1, 4))[:, 1:]
+            
