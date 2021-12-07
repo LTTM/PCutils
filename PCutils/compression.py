@@ -463,3 +463,36 @@ def bj_delta(R1, PSNR1, R2, PSNR2, mode=0, poly_exp=3):
         avg_exp_diff = (int2-int1)/(max_int-min_int)
         avg_diff = (np.exp(avg_exp_diff)-1)*100
     return avg_diff
+
+def one_level_custom_raht(block: np.ndarray) -> [bool, np.ndarray]:
+
+    '''
+    performs a slightly different raht transform
+    Parameters:
+        block: array of 2x2x2 blocks to be transformed
+    Returns:
+        the transformed 2x2x2 block
+    '''
+
+    geom = block[..., :1]
+    col = block[..., 1:] * geom
+
+    w = geom
+    final = []
+    for i in range(3):
+        w = np.maximum(np.sum(w, axis = 1), 1)
+        lf = np.sum(col, axis = 1) / w
+        hf = (col[:, :1] - col[:, 1:]).squeeze(1) / w
+        col = lf
+        final = [hf.reshape((
+            block.shape[0],
+            -1,
+            block.shape[-1] - 1
+        ))] + final
+    final = [lf.reshape((
+        block.shape[0],
+        -1,
+        block.shape[-1] - 1
+    ))] + final
+
+    return np.concatenate(final, axis=1)
