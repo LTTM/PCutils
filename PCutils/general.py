@@ -115,7 +115,7 @@ def voxelize_PC(pc, n_voxels=1024):
 
     # normalizing the PC to have a 10 bit representation
     pc[:, :3] = pc[:, :3] - np.reshape(delta_m, (1, -1))
-    pc[:, :3] = np.round(pc[:, :3] / dim_range) + n_voxels//2
+    pc[:, :3] = np.floor(pc[:, :3] / dim_range) + n_voxels//2
 
     return pc
 
