@@ -480,9 +480,9 @@ def one_level_custom_raht(block: np.ndarray) -> [bool, np.ndarray]:
     w = geom
     final = []
     for i in range(3):
-        w = np.maximum(np.sum(w, axis = 1), 1)
-        lf = np.sum(col, axis = 1) / w
-        hf = (col[:, :1] - col[:, 1:]).squeeze(1) / w
+        w = np.sum(w, axis = 1)
+        lf = np.sum(col, axis = 1) / np.maximum(w, 1)
+        hf = (col[:, :1] - col[:, 1:]).squeeze(1) / np.maximum(w)
         col = lf
         final = [hf.reshape((
             block.shape[0],
