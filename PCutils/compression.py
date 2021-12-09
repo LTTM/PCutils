@@ -482,7 +482,7 @@ def one_level_custom_raht(block: np.ndarray) -> np.ndarray:
     for i in range(3):
         w = np.sum(w, axis = 1)
         lf = np.sum(col, axis = 1) / np.maximum(w, 1)
-        hf = (col[:, :1] - col[:, 1:]).squeeze(1) / np.maximum(w)
+        hf = (col[:, :1] - col[:, 1:]).squeeze(1) / np.maximum(w, 1)
         col = lf
         final = [hf.reshape((
             block.shape[0],
