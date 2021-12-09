@@ -464,7 +464,7 @@ def bj_delta(R1, PSNR1, R2, PSNR2, mode=0, poly_exp=3):
         avg_diff = (np.exp(avg_exp_diff)-1)*100
     return avg_diff
 
-def one_level_custom_raht(block: np.ndarray) -> [bool, np.ndarray]:
+def one_level_custom_raht(block: np.ndarray) -> np.ndarray:
 
     '''
     performs a slightly different raht transform
