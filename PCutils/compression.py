@@ -475,19 +475,40 @@ def one_level_raht(block: np.ndarray) -> np.ndarray:
     '''
 
     geom = block[..., :1]
-    col = block[..., 1:] * geom
+    lf = block[..., 1:] * geom
 
     w = geom
     final = []
     for i in range(3):
 
         w_sqrt = np.sqrt(w) 
-        w_div = np.maximum(np.sum(w_sqrt, axis = 1), 1)
-        w = np.sum(w, axis = 1)
+        w_sqrt_inv = np.concatenate([
+            - w_sqrt[(slice(None),) * (i + 1) + (slice(1, 2),)],
+            w_sqrt[(slice(None),) * (i + 1) + (slice(0, 1),)],
+        ], axis = i + 1)
+        w_coeffs = np.concatenate([w_sqrt, w_sqrt_inv], axis=-1)
+        w_coeffs = np.swapaxes(w_coeffs, i+1, -2).swapaxes(-1, -2)
+        
+        w_div = np.maximum(np.sum(w_sqrt, axis = i+1, keepdims=True), 1)
+        w = np.sum(w, axis = i+1, keepdims=True)
 
-        lf = np.sum(col * w_sqrt, axis = 1) / w_div
-        hf = (- w_sqrt[:, 1:] * col[:, :1] + \
-                w_sqrt[:, :1] * col[:, 1:]).squeeze(1) / w_div
+        coeffs = w_coeffs @ np.swapaxes(lf, i + 1, -2)
+        coeffs = np.swapaxes(coeffs, i+1, -2) / w_div
+        hf = coeffs[(slice(None),)*(i + 1) + (slice(1, 2),)]
+        lf = coeffs[(slice(None),)*(i + 1) + (slice(0, 1),)]
+        final = [hf.reshape((
+            block.shape[0],
+            -1,
+            3
+        ))] + final
+    final = [lf.reshape((
+        block.shape[0],
+        -1,
+        3
+    ))] + final
+
+    return np.concatenate(final, axis=1)
+
         col = lf
         final = [hf.reshape((
             block.shape[0],
