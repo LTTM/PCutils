@@ -464,7 +464,7 @@ def bj_delta(R1, PSNR1, R2, PSNR2, mode=0, poly_exp=3):
         avg_diff = (np.exp(avg_exp_diff)-1)*100
     return avg_diff
 
-def one_level_custom_raht(block: np.ndarray) -> np.ndarray:
+def one_level_raht(block: np.ndarray) -> np.ndarray:
 
     '''
     performs a slightly different raht transform
@@ -480,9 +480,14 @@ def one_level_custom_raht(block: np.ndarray) -> np.ndarray:
     w = geom
     final = []
     for i in range(3):
+
+        w_sqrt = np.sqrt(w) 
+        w_div = np.maximum(np.sum(w_sqrt, axis = 1), 1)
         w = np.sum(w, axis = 1)
-        lf = np.sum(col, axis = 1) / np.maximum(w, 1)
-        hf = (col[:, :1] - col[:, 1:]).squeeze(1) / np.maximum(w, 1)
+
+        lf = np.sum(col * w_sqrt, axis = 1) / w_div
+        hf = (- w_sqrt[:, 1:] * col[:, :1] + \
+                w_sqrt[:, :1] * col[:, 1:]).squeeze(1) / w_div
         col = lf
         final = [hf.reshape((
             block.shape[0],
