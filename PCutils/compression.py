@@ -7,6 +7,7 @@ import subprocess
 from sys import platform
 from plyfile import PlyData, PlyElement
 from matplotlib.font_manager import FontProperties
+from sklearn.neighbors import KDTree
 import pandas as pd
 
 def qualityPCL(rec_ref, str_ref, scale=1023, colored=False):
