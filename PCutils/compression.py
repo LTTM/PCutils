@@ -113,6 +113,8 @@ def encode_with_TMC13(
             encode_colors (Bool): if true also colors are encoded
             **args: extra arguments specifics to TMC13 (eg. qp that sets 
                     quantization parameter for the Y component)
+        Return:
+            execution time in milliseconds
     '''
 
     tmc13_args = {
@@ -136,7 +138,7 @@ def encode_with_TMC13(
         tmc13_args["outputBinaryPly"] = 0
 
     tmc13_args.update(args)
-    _encode_with_TMC13(path_to_TMC13, silence_output, **tmc13_args)
+    return _encode_with_TMC13(path_to_TMC13, silence_output, **tmc13_args)
 
 
 def _encode_with_TMC13(TMC13, silence_output=True, **args):
@@ -150,6 +152,8 @@ def _encode_with_TMC13(TMC13, silence_output=True, **args):
                     command
             **args: arguments specifics to TMC13 (eg. qp that sets 
                     quantization parameter for the Y component)
+        Return:
+            execution time in milliseconds
     '''
 
     command = " ".join(
@@ -157,11 +161,19 @@ def _encode_with_TMC13(TMC13, silence_output=True, **args):
         [f"--{key}={args[key]}" for key in args]
     )
 
-    if silence_output:
-        command += " >/dev/null 2>&1"
+    command += " 2>&1"
 
     # executing the command
-    os.system(command)
+    f = os.popen(command, "r")
+    output = f.read()
+    match_string = "Processing time (user):"
+    start_index = output.find(match_string) + len(match_string)
+    end_index = output.find("s", start_index)
+    time = float(output[start_index:end_index-1])
+    if not silence_output:
+        print(output)
+
+    return time
 
 def decode_with_TMC13(
         compressed_path,
@@ -184,6 +196,8 @@ def decode_with_TMC13(
                                or ascii form
             silence_output (bool): used to silence the output of the compression
                     command
+        Return:
+            execution time in milliseconds
 
     '''
     # building up the command
@@ -198,11 +212,20 @@ def decode_with_TMC13(
     if ascii_text:
         command += " --outputBinaryPly=0"
 
-    if silence_output:
-        command += " >/dev/null 2>&1"
+    command += " 2>&1"
 
     # executing the command
-    os.system(command)
+    f = os.popen(command, "r")
+    output = f.read()
+    match_string = "Processing time (user):"
+    start_index = output.find(match_string) + len(match_string)
+    end_index = output.find("s", start_index)
+    if not silence_output:
+        print(output)
+
+    time = float(output[start_index:end_index-1])
+    return time
+
 
 
 def decode_with_draco(
@@ -222,6 +245,8 @@ def decode_with_draco(
             path_to_draco (string): path to the draco executable
             silence_output (bool): used to silence the output of the compression
                     command
+        Return:
+            execution time in milliseconds
 
     '''
 
@@ -231,10 +256,19 @@ def decode_with_draco(
         f"-o {reconstruction_path}"
     ])
 
-    if silence_output:
-        command += " >/dev/null 2>&1"
+    command += " 2>&1"
 
-    os.system(command)
+    # executing the command
+    f = os.popen(command, "r")
+    output = f.read()
+    match_string = "ms to decode"
+    end_index = output.find(match_string) 
+    start_index = output.find("(", end_index - 10) + 1
+    time = float(output[start_index:end_index]) / 1000
+    if not silence_output:
+        print(output)
+
+    return time
 
 
 def decode(
@@ -258,10 +292,12 @@ def decode(
                                or ascii form
             silence_output (bool): used to silence the output of the compression
                     command
+        Return:
+            execution time in milliseconds
 
     '''
     if codec == "tmc13":
-        decode_with_TMC13(
+        return decode_with_TMC13(
             compressed_path,
             reconstructed_path,
             path_to_codec,
@@ -269,7 +305,7 @@ def decode(
             silence_output=silence_output
         )
     elif codec == "draco":
-        decode_with_draco(
+        return decode_with_draco(
             compressed_path,
             reconstructed_path,
             path_to_codec,
@@ -295,6 +331,8 @@ def encode_with_draco(
             quantization_bits (int): number of bits used to represent geometry
             silence_output (bool): used to silence the output of the compression
                                    command
+        Return:
+            execution time in milliseconds
     '''
 
     command = " ".join([
@@ -305,10 +343,19 @@ def encode_with_draco(
         f"-point_cloud"
     ])
 
-    if silence_output:
-        command += " >/dev/null 2>&1"
+    command += " 2>&1"
 
-    os.system(command)
+    # executing the command
+    f = os.popen(command, "r")
+    output = f.read()
+    match_string = "ms to encode"
+    end_index = output.find(match_string) 
+    start_index = output.find("(", end_index - 10) + 1
+    time = float(output[start_index:end_index]) / 1000
+    if not silence_output:
+        print(output)
+
+    return time
 
 
 def encode(
@@ -332,10 +379,12 @@ def encode(
             codec (string): used to choose which codec to use (tmc13/draco)
             **args: dictionary of parameters for tmc13 (see function
                     encode_with_TMC13)
+        Return:
+            execution time in milliseconds
     '''
 
     if codec == "draco":
-        encode_with_draco(
+        return encode_with_draco(
             path_to_codec,
             input_path,
             compressed_path,
@@ -344,7 +393,7 @@ def encode(
         )
 
     elif codec == "tmc13":
-        encode_with_TMC13(
+        return encode_with_TMC13(
             path_to_codec,
             input_path,
             compressed_path,
@@ -381,8 +430,10 @@ def encode_and_decode(
             codec (string): used to choose which codec to use (tmc13/draco)
             **args: dictionary of parameters for tmc13 (see function
                     encode_with_TMC13)
+        Return:
+            execution time in milliseconds
     '''
-    encode(
+    time_encode = encode(
         path_to_codec,
         input_path,
         compressed_path,
@@ -392,13 +443,15 @@ def encode_and_decode(
         **args
     )
 
-    decode(
+    time_decode = decode(
         compressed_path,
         reconstructed_path,
         path_to_codec,
         codec,
         ascii_text=silence_output,
     )
+
+    return time_encode + time_decode
 
 # taken from
 # https://github.com/jascenso/bjontegaard_metrics/blob/master/bj_delta.py
