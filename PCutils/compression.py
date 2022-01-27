@@ -553,3 +553,38 @@ def one_level_inverse_raht(
         lf = (w_coeffs @ mixed_coeffs).swapaxes(3-i, -2) * w_div
 
     return lf
+
+def D1_PSNR(pc1, pc2, scale=None):
+
+    '''
+    Parameters:
+        pc1 (np.ndarray): geometry of the first point cloud, 
+                          must have shape (n, 3) where n is the number of points
+        pc2 (np.ndarray): geometry of the second point cloud, 
+                          must have shape (n, 3) where n is the number of points
+        scale (int): scale factor to be used in the psnr calculation, if None the 
+                     scale factor is chosen as the maximum coordinate excursion 
+                     of pc1
+    Returns (int): the D1 PSNR as calculated in qualityPCL but faster
+    '''
+
+    if scale is None:
+        scale = np.max(np.max(pc1, axis = 0) - np.min(pc1, axis = 0))
+
+    # finding out distance between points in pc2 and 
+    # their nn in pc1
+    tree1 = KDTree(pc1, leaf_size=32)
+    dists1 = tree1.query(pc2, k=1)[0]
+    # the / 3 is because probably in the mpeg script they just compute 
+    # mean squared error instead of the average of the squared distance
+    dist1 = (dists1 ** 2).mean() / 3
+    
+    # finding out distance between points in pc1 and 
+    # their nn in pc2
+    tree2 = KDTree(pc2, leaf_size=32)
+    dists2 = tree2.query(pc1, k=1)[0]
+    # the / 3 is because probably in the mpeg script they just compute 
+    # mean squared error instead of the average of the squared distance
+    dist2 = (dists2 ** 2).mean() / 3
+
+    return 10 * np.log10(scale**2/max(dist1, dist2))
