@@ -175,9 +175,9 @@ def _encode_with_TMC13(TMC13, silence_output=True, print_command=False, **args):
 
     # executing the command
     f = os.popen(command, "r")
+    output = f.read()
     if not silence_output:
         print(output)
-    output = f.read()
     match_string = "Processing time (user):"
     start_index = output.find(match_string) + len(match_string)
     end_index = output.find("s", start_index)
@@ -229,9 +229,9 @@ def decode_with_TMC13(
         print(command)
     # executing the command
     f = os.popen(command, "r")
+    output = f.read()
     if not silence_output:
         print(output)
-    output = f.read()
     match_string = "Processing time (user):"
     start_index = output.find(match_string) + len(match_string)
     end_index = output.find("s", start_index)
@@ -276,9 +276,9 @@ def decode_with_draco(
     if print_command:
         print(command)
     f = os.popen(command, "r")
+    output = f.read()
     if not silence_output:
         print(output)
-    output = f.read()
     match_string = "ms to decode"
     end_index = output.find(match_string) 
     start_index = output.find("(", end_index - 10) + 1
@@ -370,12 +370,12 @@ def encode_with_draco(
         print(command)
     f = os.popen(command, "r")
     output = f.read()
+    if not silence_output:
+        print(output)
     match_string = "ms to encode"
     end_index = output.find(match_string) 
     start_index = output.find("(", end_index - 10) + 1
     time = float(output[start_index:end_index]) / 1000
-    if not silence_output:
-        print(output)
 
     return time
 
