@@ -387,7 +387,7 @@ def encode(
     quantization_bits=10,
     silence_output=True,
     codec="draco",
-    print_command=False
+    print_command=False,
     **args
 ):
     '''
