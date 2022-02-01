@@ -92,6 +92,7 @@ def encode_with_TMC13(
     q_level=0,
     ascii_text=False,
     encode_colors=False,
+    print_command=False,
     **args
 ):
     '''
@@ -139,10 +140,15 @@ def encode_with_TMC13(
         tmc13_args["outputBinaryPly"] = 0
 
     tmc13_args.update(args)
-    return _encode_with_TMC13(path_to_TMC13, silence_output, **tmc13_args)
+    return _encode_with_TMC13(
+        path_to_TMC13,
+        silence_output,
+        print_command=print_command,
+        **tmc13_args
+    )
 
 
-def _encode_with_TMC13(TMC13, silence_output=True, **args):
+def _encode_with_TMC13(TMC13, silence_output=True, print_command=False, **args):
 
     '''
     Uses TMC13 to encode a point cloud with arbitrary parameters
@@ -164,6 +170,9 @@ def _encode_with_TMC13(TMC13, silence_output=True, **args):
 
     command += " 2>&1"
 
+    if print_command:
+        print(command)
+
     # executing the command
     f = os.popen(command, "r")
     if not silence_output:
@@ -181,7 +190,8 @@ def decode_with_TMC13(
         reconstructed_path,
         path_to_TMC13,
         ascii_text=True,
-        silence_output=True
+        silence_output=True,
+        print_command=False
 ):
 
 
@@ -215,6 +225,8 @@ def decode_with_TMC13(
 
     command += " 2>&1"
 
+    if print_command:
+        print(command)
     # executing the command
     f = os.popen(command, "r")
     if not silence_output:
@@ -233,7 +245,8 @@ def decode_with_draco(
     compressed_path,
     reconstruction_path,
     path_to_draco,
-    silence_output=True
+    silence_output=True,
+    print_command=False
 ):
 
     '''
@@ -260,6 +273,8 @@ def decode_with_draco(
     command += " 2>&1"
 
     # executing the command
+    if print_command:
+        print(command)
     f = os.popen(command, "r")
     if not silence_output:
         print(output)
@@ -278,7 +293,8 @@ def decode(
     path_to_codec,
     codec,
     ascii_text=True,
-    silence_output=True
+    silence_output=True,
+    print_command=False
 ):
     '''
     Uses either TMC13 or draco to decode a point cloud
@@ -303,14 +319,16 @@ def decode(
             reconstructed_path,
             path_to_codec,
             ascii_text=ascii_text,
-            silence_output=silence_output
+            silence_output=silence_output,
+            print_command=print_command
         )
     elif codec == "draco":
         return decode_with_draco(
             compressed_path,
             reconstructed_path,
             path_to_codec,
-            silence_output=silence_output
+            silence_output=silence_output,
+            print_command=print_command
         )
     else:
         raise Exception(f"NotImplementedError: {codec} codec not supported")
@@ -321,7 +339,8 @@ def encode_with_draco(
     input_path,
     compressed_path,
     quantization_bits=0,
-    silence_output=True
+    silence_output=True,
+    print_command=False
 ):
     '''
     Uses draco to encode a point cloud
@@ -347,6 +366,8 @@ def encode_with_draco(
     command += " 2>&1"
 
     # executing the command
+    if print_command:
+        print(command)
     f = os.popen(command, "r")
     output = f.read()
     match_string = "ms to encode"
@@ -366,6 +387,7 @@ def encode(
     quantization_bits=10,
     silence_output=True,
     codec="draco",
+    print_command=False
     **args
 ):
     '''
@@ -390,7 +412,8 @@ def encode(
             input_path,
             compressed_path,
             quantization_bits=quantization_bits,
-            silence_output=silence_output
+            silence_output=silence_output,
+            print_command=print_command
         )
 
     elif codec == "tmc13":
@@ -400,6 +423,7 @@ def encode(
             compressed_path,
             q_level=quantization_bits,
             silence_output=silence_output,
+            print_command=print_command,
             **args
         )
     else:
@@ -414,6 +438,7 @@ def encode_and_decode(
     quantization_bits=10,
     silence_output=True,
     codec="draco",
+    print_command=False,
     **args
 ):
     '''
@@ -441,6 +466,7 @@ def encode_and_decode(
         quantization_bits=quantization_bits,
         silence_output=silence_output,
         codec=codec,
+        print_command=print_command,
         **args
     )
 
@@ -450,6 +476,7 @@ def encode_and_decode(
         path_to_codec,
         codec,
         ascii_text=silence_output,
+        print_command=print_command,
     )
 
     return time_encode + time_decode
