@@ -16,5 +16,5 @@ setuptools.setup(
     },
     license='MIT',
     packages=['PCutils'],
-    install_requires=['numpy', 'matplotlib', "plyfile", "pandas"],
+    install_requires=['numpy', 'matplotlib', "plyfile", "pandas", "scikit-learn"],
 )
